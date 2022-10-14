@@ -114,7 +114,7 @@ class ViewController: UIViewController,UIScrollViewDelegate {
         
         var intervals: [CGFloat] = []
         // scroll view's left edge is 0, right edge is 1
-        for i in stride(from: 0.0, through: 1.0, by: (1/(CGFloat(pages)-1))) {
+        for i in stride(from: 0.0, through: 1.0, by: (1 / (Double(Float(pages)) - 1) )) {
             // multiply and divide by 100 to switch between Int and CGFloat
             intervals.append(CGFloat(i))
         }
@@ -122,8 +122,6 @@ class ViewController: UIViewController,UIScrollViewDelegate {
         return intervals
         
     }
-    
-    
     
     
     // set the scroll view's constraints
@@ -136,13 +134,7 @@ class ViewController: UIViewController,UIScrollViewDelegate {
         presentationScrollView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: 0).isActive = true
     }
     
-    
-    
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let pageNumber = round(scrollView.contentOffset.x / scrollView.frame.size.width)
-        presentationPageControl.currentPage = Int(pageNumber)
-    }
-    
+   
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         oldContentOffset = scrollView.contentOffset.x
     }
@@ -183,5 +175,96 @@ class ViewController: UIViewController,UIScrollViewDelegate {
         
         
     }
+    
+    
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            let pageIndex = round(scrollView.contentOffset.x/view.frame.width)
+        presentationPageControl.currentPage = Int(pageIndex)
+        
+       
+            
+            let maximumHorizontalOffset: CGFloat = scrollView.contentSize.width - scrollView.frame.width
+            let currentHorizontalOffset: CGFloat = scrollView.contentOffset.x
+            
+            // vertical
+            let maximumVerticalOffset: CGFloat = scrollView.contentSize.height - scrollView.frame.height
+            let currentVerticalOffset: CGFloat = scrollView.contentOffset.y
+            
+            let percentageHorizontalOffset: CGFloat = currentHorizontalOffset / maximumHorizontalOffset
+            let percentageVerticalOffset: CGFloat = currentVerticalOffset / maximumVerticalOffset
+            
+            
+            /*
+             * below code changes the background color of view on paging the scrollview
+             */
+           //self.scrollView(scrollView, didScrollToPercentageOffset: percentageHorizontalOffset)
+            
+        
+            /*
+             * below code scales the imageview on paging the scrollview
+             */
+            let percentOffset: CGPoint = CGPoint(x: percentageHorizontalOffset, y: percentageVerticalOffset)
+            
+            if(percentOffset.x > 0 && percentOffset.x <= 0.25) {
+                
+                presentationSlides[0].lblTitle.transform = CGAffineTransform(scaleX: (0.25-percentOffset.x)/0.25, y: (0.25-percentOffset.x)/0.25)
+                presentationSlides[1].lblTitle.transform = CGAffineTransform(scaleX: percentOffset.x/0.25, y: percentOffset.x/0.25)
+                
+            } else if(percentOffset.x > 0.25 && percentOffset.x <= 0.50) {
+                presentationSlides[1].lblTitle.transform = CGAffineTransform(scaleX: (0.50-percentOffset.x)/0.25, y: (0.50-percentOffset.x)/0.25)
+                presentationSlides[2].lblTitle.transform = CGAffineTransform(scaleX: percentOffset.x/0.50, y: percentOffset.x/0.50)
+                
+            } else if(percentOffset.x > 0.50 && percentOffset.x <= 0.75) {
+                presentationSlides[2].lblTitle.transform = CGAffineTransform(scaleX: (0.75-percentOffset.x)/0.25, y: (0.75-percentOffset.x)/0.25)
+                presentationSlides[3].lblTitle.transform = CGAffineTransform(scaleX: percentOffset.x/0.75, y: percentOffset.x/0.75)
+                
+            } else if(percentOffset.x > 0.75 && percentOffset.x <= 1) {
+                presentationSlides[3].lblTitle.transform = CGAffineTransform(scaleX: (1-percentOffset.x)/0.25, y: (1-percentOffset.x)/0.25)
+                presentationSlides[4].lblTitle.transform = CGAffineTransform(scaleX: percentOffset.x, y: percentOffset.x)
+            }
+        }
+        
+        
+        
+        
+        func scrollView(_ scrollView: UIScrollView, didScrollToPercentageOffset percentageHorizontalOffset: CGFloat) {
+            
+            if presentationPageControl.currentPage == 0 {
+                //Change background color to toRed: 103/255, fromGreen: 58/255, fromBlue: 183/255, fromAlpha: 1
+                //Change pageControl selected color to toRed: 103/255, toGreen: 58/255, toBlue: 183/255, fromAlpha: 0.2
+                //Change pageControl unselected color to toRed: 255/255, toGreen: 255/255, toBlue: 255/255, fromAlpha: 1
+                
+                let pageUnselectedColor: UIColor = fade(fromRed: 255/255, fromGreen: 255/255, fromBlue: 255/255, fromAlpha: 1, toRed: 103/255, toGreen: 58/255, toBlue: 183/255, toAlpha: 1, withPercentage: percentageHorizontalOffset * 3)
+                presentationPageControl.pageIndicatorTintColor = pageUnselectedColor
+            
+                
+                let bgColor: UIColor = fade(fromRed: 103/255, fromGreen: 58/255, fromBlue: 183/255, fromAlpha: 1, toRed: 255/255, toGreen: 255/255, toBlue: 255/255, toAlpha: 1, withPercentage: percentageHorizontalOffset * 3)
+                presentationSlides[presentationPageControl.currentPage].backgroundColor = bgColor
+                
+                let pageSelectedColor: UIColor = fade(fromRed: 81/255, fromGreen: 36/255, fromBlue: 152/255, fromAlpha: 1, toRed: 103/255, toGreen: 58/255, toBlue: 183/255, toAlpha: 1, withPercentage: percentageHorizontalOffset * 3)
+                presentationPageControl.currentPageIndicatorTintColor = pageSelectedColor
+            }
+        }
+        
+        
+        func fade(fromRed: CGFloat,
+                  fromGreen: CGFloat,
+                  fromBlue: CGFloat,
+                  fromAlpha: CGFloat,
+                  toRed: CGFloat,
+                  toGreen: CGFloat,
+                  toBlue: CGFloat,
+                  toAlpha: CGFloat,
+                  withPercentage percentage: CGFloat) -> UIColor {
+            
+            let red: CGFloat = (toRed - fromRed) * percentage + fromRed
+            let green: CGFloat = (toGreen - fromGreen) * percentage + fromGreen
+            let blue: CGFloat = (toBlue - fromBlue) * percentage + fromBlue
+            let alpha: CGFloat = (toAlpha - fromAlpha) * percentage + fromAlpha
+            
+            // return the fade colour
+            return UIColor(red: red, green: green, blue: blue, alpha: alpha)
+        }
 }
 
